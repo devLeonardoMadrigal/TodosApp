@@ -6,5 +6,5 @@ sealed class UsersScreenState{
     data object  Nothing  : UsersScreenState()
     data object  Loading  : UsersScreenState()
     data class Error(val msg   : String) :  UsersScreenState()
-    data class Success(val todos : List<UserDTO>) : UsersScreenState()
+    data class Success(val users : List<UserDTO>) : UsersScreenState()
 }
