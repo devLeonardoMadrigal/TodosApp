@@ -11,17 +11,66 @@ import com.example.todosapp.data.UsersApiService
 import com.example.todosapp.data.UsersApiServiceImpl
 import com.example.todosapp.data.UsersNetwork
 import com.example.todosapp.model.Response
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class UsersViewModel(private val apiService: UsersApiService) : ViewModel() {
 
 
     var state by mutableStateOf(UsersScreenState())
+    var searchState by mutableStateOf(SearchState())
 
     fun processIntent(intent: UsersIntent) {
         when (intent) {
             UsersIntent.Error -> errorHandler()
             UsersIntent.FetchData -> fetchData()
+        }
+    }
+
+    fun processSearchIntent(query: String, searchIntent: SearchUserIntent){
+        when(searchIntent) {
+            SearchUserIntent.Error -> errorHandler()
+            SearchUserIntent.FetchData -> onSearchQueryChanged(query)
+        }
+    }
+
+    private fun onSearchQueryChanged(query: String){
+        if(query.isBlank()){
+            searchState = searchState.copy(
+                isLoading = false
+            )
+        }
+        viewModelScope.launch {
+            delay(500)
+            val response = apiService.getUser(userId = query)
+
+            when (response) {
+                is Response.Error -> {
+                    searchState.copy(
+                        isLoading = false,
+                        error = response.msg,
+                        user = null
+                    )
+                }
+
+                is Response.Success -> {
+                    if (response.result == {} || response.result == null){
+                        searchState = searchState.copy(
+                            isLoading = false,
+                            user = null,
+                            error = "No user found"
+                        )
+                    } else{
+                        searchState = searchState.copy(
+                            isLoading = false,
+                            user = response.result,
+                            error = ""
+                        )
+                    }
+
+                }
+            }
+
         }
     }
 

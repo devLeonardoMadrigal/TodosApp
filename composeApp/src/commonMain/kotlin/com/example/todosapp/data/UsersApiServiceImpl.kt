@@ -23,5 +23,16 @@ class UsersApiServiceImpl(private val client: HttpClient) : UsersApiService {
             Response.Error(e.message.toString())
         }
     }
+
+    override suspend fun getUser(userId: String): Response<UserDTO> {
+        return try {
+            val user = client.get("${BASE_URL}users/${userId}"){
+                accept(ContentType.Application.Json)
+            }
+            Response.Success(user.body())
+        }catch (e: Exception){
+            Response.Error(e.message.toString())
+        }
+    }
 }
 

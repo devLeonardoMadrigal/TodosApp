@@ -8,7 +8,18 @@ data class UsersScreenState(
     val error: String? = ""
 )
 
-public sealed class UsersIntent{
+data class SearchState(
+    val isLoading: Boolean = false,
+    val user : UserDTO? = null,
+    val error: String? = ""
+)
+
+sealed class UsersIntent{
     object FetchData: UsersIntent()
     object Error : UsersIntent()
+}
+
+sealed class SearchUserIntent(){
+    object FetchData: SearchUserIntent()
+    object Error : SearchUserIntent()
 }
