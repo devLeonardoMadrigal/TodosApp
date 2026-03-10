@@ -1,5 +1,8 @@
 package com.example.todosapp.viewmodel
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
@@ -8,40 +11,52 @@ import com.example.todosapp.data.UsersApiService
 import com.example.todosapp.data.UsersApiServiceImpl
 import com.example.todosapp.data.UsersNetwork
 import com.example.todosapp.model.Response
-import com.example.todosapp.model.UserDTO
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class UsersViewModel(private val apiService: UsersApiService) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<UsersScreenState>(UsersScreenState.Nothing)
-    val uiState get() = _uiState.asStateFlow()
 
-    fun loadUsers() {
-        viewModelScope.launch (Dispatchers.IO){
-            _uiState.update {
-                UsersScreenState.Loading
-            }
+    var state by mutableStateOf(UsersScreenState())
+
+    fun processIntent(intent: UsersIntent) {
+        when (intent) {
+            UsersIntent.Error -> errorHandler()
+            UsersIntent.FetchData -> fetchData()
+        }
+    }
+
+    private fun fetchData() {
+        state = state.copy(isLoading = true)
+
+        viewModelScope.launch {
 
             val response = apiService.getUsers()
 
-            when(response) {
+            when (response) {
                 is Response.Error -> {
-                    _uiState.update {
-                        UsersScreenState.Error(response.msg)
-                    }
+                    state.copy(
+                        isLoading = false,
+                        error = response.msg
+                    )
                 }
-                is Response.Success<*> -> {
-                    _uiState.update {
-                        UsersScreenState.Success(response.result as List<UserDTO>)
-                    }
+
+                is Response.Success -> {
+                    state = state.copy(
+                        error = "",
+                        isLoading = false,
+                        users = response.result
+                    )
                 }
             }
         }
+    }
+
+    private fun errorHandler() {
+        state = state.copy(
+            error = "ERROR",
+            isLoading = false,
+            users = emptyList()
+        )
     }
 }
 

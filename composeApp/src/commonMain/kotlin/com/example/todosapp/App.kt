@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.todosapp.viewmodel.UsersIntent
 import com.example.todosapp.viewmodel.UsersScreenState
 import com.example.todosapp.viewmodel.UsersViewModel
 import com.example.todosapp.viewmodel.usersModelFactory
@@ -29,8 +30,8 @@ import com.example.todosapp.viewmodel.usersModelFactory
 fun App() {
     MaterialTheme {
 
-        val usersViewModel = viewModel<UsersViewModel>(factory = usersModelFactory)
-        val screenState by usersViewModel.uiState.collectAsStateWithLifecycle()
+        val usersViewModel : UsersViewModel = viewModel(factory = usersModelFactory)
+        val state = usersViewModel.state
 
         Column(
             modifier = Modifier
@@ -39,27 +40,22 @@ fun App() {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Button(onClick = { usersViewModel.loadUsers() }) {
+            Button(onClick = { usersViewModel.processIntent(UsersIntent.FetchData) }) {
                 Text("Show Users while on ${getPlatform().name}")
             }
 
-            when(val screenState = screenState) {
-                is UsersScreenState.Error -> {
-                    Text("ERROR: ${screenState.msg}")
-                }
-                UsersScreenState.Loading ->
-                    CircularProgressIndicator()
-                UsersScreenState.Nothing -> {
-                    Text("Click the button to load the data")
-                }
-                is UsersScreenState.Success -> {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(screenState.users){ user ->
-                            Card(Modifier.fillMaxWidth()) {
-                                Column(Modifier.fillMaxWidth().padding(12.dp)) {
-                                    Text("Name: ${user.name}")
-                                }
-                            }
+            if(state.isLoading){
+                CircularProgressIndicator()
+            }
+            if(!state.error.isNullOrBlank()){
+                Text("ERROR: ${state.error}")
+            }
+
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(state.users){ user ->
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.fillMaxWidth().padding(12.dp)) {
+                            Text("Name: ${user.name}")
                         }
                     }
                 }

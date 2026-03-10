@@ -2,9 +2,13 @@ package com.example.todosapp.viewmodel
 
 import com.example.todosapp.model.UserDTO
 
-sealed class UsersScreenState{
-    data object  Nothing  : UsersScreenState()
-    data object  Loading  : UsersScreenState()
-    data class Error(val msg   : String) :  UsersScreenState()
-    data class Success(val users : List<UserDTO>) : UsersScreenState()
+data class UsersScreenState(
+    val isLoading: Boolean = false,
+    val users : List<UserDTO> = emptyList(),
+    val error: String? = ""
+)
+
+public sealed class UsersIntent{
+    object FetchData: UsersIntent()
+    object Error : UsersIntent()
 }
